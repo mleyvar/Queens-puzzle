@@ -1,0 +1,50 @@
+version: '2.1'
+services:
+   postgres_server:
+      restart: always
+      image: postgres:9.5
+      expose:
+         - 5432
+      ports:   
+         - "5432:5432"   
+      volumes:
+          - postgres_data:/var/lib/postgresql/data
+      environment:
+         - POSTGRES_DATABASE=postgres
+         - POSTGRES_USER=postgres
+         - POSTGRES_PASSWORD=postgres
+         - POSTGRES_ROOT_PASSWORD=postgres
+      networks:
+         - db_nw
+
+   app:
+      build: 
+        context: .
+        dockerfile: dockerfile
+      restart: always
+      environment:
+        DEBUG: 1
+        NUM:  8
+      ports:
+        - 5432
+      volumes:
+        - .:/app
+      command: python /app/source/main.py
+      links:
+        - postgres_server:postgres_server
+
+      depends_on:
+        - postgres_server
+      environment:
+          DB_HOST: postgres_server
+          DB_NAME: postgres
+          DB_USER: postgres
+          DB_PASS: postgres
+      networks:
+          - db_nw
+networks:
+  db_nw:
+    driver: bridge
+
+volumes:
+  postgres_data: {}
